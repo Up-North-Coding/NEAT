@@ -6,7 +6,7 @@ class Connection {
   to = null;
   enabled = true;
 
-  constructor(from, to, weight = 0, enabled = true) {
+  constructor(from, to, weight = 1, enabled = true) {
     if (!(from instanceof Neuron)) {
       throw new Error(
         "Connection constructor requires a Neuron as the first argument"

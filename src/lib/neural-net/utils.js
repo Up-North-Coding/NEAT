@@ -1,34 +1,34 @@
-import { Genome } from './neat/Genome';
+/*import { Genome } from './neat/Genome';
 import { Organism } from './neat/Organism';
 import { Species } from './neat/Species';
 import { NodeGene } from './neat/NodeGene';
 import { ConnectionGene } from './neat/ConnectionGene';
-import { NodeType, NEATConfig } from './types';
+import { NodeType, NEATConfig } from './types';*/
 
 /**
  * Picks n random items from the given list
  * @param list
  * @param n
  */
-export function getRandomItems(list, n){
-    let result = [];
-    let source = [...list];
+export function getRandomItems(list, n) {
+  let result = [];
+  let source = [...list];
 
-    n = Math.min(n, list.length);
+  n = Math.min(n, list.length);
 
-    while (result.length < n) {
-        let i = Math.floor(rnd(source.length));
-        result.push(...source.splice(i, 1));
-    }
+  while (result.length < n) {
+    let i = Math.floor(rnd(source.length));
+    result.push(...source.splice(i, 1));
+  }
 
-    return result;
+  return result;
 }
 
 /**
  * Returns a random boolean
  */
 export function randomBool() {
-    return Math.random() > 0.5;
+  return Math.random() > 0.5;
 }
 
 /**
@@ -36,9 +36,9 @@ export function randomBool() {
  * @param values
  */
 export function mean(...values) {
-    return values.length
-        ? values.reduce((sum, n) => sum + n, 0) / values.length
-        : 0;
+  return values.length
+    ? values.reduce((sum, n) => sum + n, 0) / values.length
+    : 0;
 }
 
 /**
@@ -47,50 +47,50 @@ export function mean(...values) {
  * @param from
  */
 export function rnd(to = 1, from = 0) {
-    return Math.random() * (to - from) + from;
+  return Math.random() * (to - from) + from;
 }
 
 /**
  * Returns a normally distribuited random number (Box-Muller transform)
  */
 export function* gaussian(mean = 0, standardDeviation = 1) {
-    let u, v, s;
+  let u, v, s;
 
-    while (true) {
-        do {
-            v = rnd(1, -1);
-            u = rnd(1, -1);
-            s = u ** 2 + v ** 2;
-        } while (s === 0 || s >= 1);
+  while (true) {
+    do {
+      v = rnd(1, -1);
+      u = rnd(1, -1);
+      s = u ** 2 + v ** 2;
+    } while (s === 0 || s >= 1);
 
-        s = Math.sqrt((-2 * Math.log(s)) / s);
+    s = Math.sqrt((-2 * Math.log(s)) / s);
 
-        yield s * u * standardDeviation + mean;
-        yield s * v * standardDeviation + mean;
-    }
+    yield s * u * standardDeviation + mean;
+    yield s * v * standardDeviation + mean;
+  }
 }
 
 /**
  * Generate a random UUIDv4 (rfc4122 compliant)
  */
 export function uuid() {
-    const uuid = [8, 4, 4, 4, 12].map((segmentLength) => {
-        let segment = Array(segmentLength);
+  const uuid = [8, 4, 4, 4, 12].map((segmentLength) => {
+    let segment = Array(segmentLength);
 
-        for (let i = 0; i < segmentLength; i++)
-            // ToUint32 http://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
-            segment[i] = (Math.random() * 0xf) >>> 0;
+    for (let i = 0; i < segmentLength; i++)
+      // ToUint32 http://www.ecma-international.org/ecma-262/5.1/#sec-11.7.3
+      segment[i] = (Math.random() * 0xf) >>> 0;
 
-        return segment;
-    });
+    return segment;
+  });
 
-    uuid[2][0] &= 0x3;
-    uuid[2][1] |= 0x8;
-    uuid[3][0] = 0x4;
+  uuid[2][0] &= 0x3;
+  uuid[2][1] |= 0x8;
+  uuid[3][0] = 0x4;
 
-    return uuid
-        .map((segment) => segment.map(n => n.toString(16)).join(''))
-        .join('-');
+  return uuid
+    .map((segment) => segment.map((n) => n.toString(16)).join(""))
+    .join("-");
 }
 
 /**
@@ -99,43 +99,40 @@ export function uuid() {
  * @param genome2
  * @param config
  */
-export function compatibility(
-    genome1,
-    genome2,
-    config
-) {
-    // TODO memoizing? consider add an id and use it for that purpose
-    let innovationNumbers = new Set([
-        ...genome1.connections.keys(),
-        ...genome2.connections.keys()
-    ]);
+export function compatibility(genome1, genome2, config) {
+  // TODO memoizing? consider add an id and use it for that purpose
+  let innovationNumbers = new Set([
+    ...genome1.connections.keys(),
+    ...genome2.connections.keys()
+  ]);
 
-    let excess = Math.abs(genome1.connections.size - genome2.connections.size),
-        disjoint = -excess,
-        matching = [],
-        N = Math.max(genome1.connections.size, genome2.connections.size, 1);
+  let excess = Math.abs(genome1.connections.size - genome2.connections.size),
+    disjoint = -excess,
+    matching = [],
+    N = Math.max(genome1.connections.size, genome2.connections.size, 1);
 
-    innovationNumbers.forEach(innovation => {
-        const gene1 = genome1.connections.get(innovation),
-            gene2 = genome2.connections.get(innovation);
+  innovationNumbers.forEach((innovation) => {
+    const gene1 = genome1.connections.get(innovation),
+      gene2 = genome2.connections.get(innovation);
 
-        if (gene1 && gene2) {
-            matching.push(Math.abs(gene1.weight - gene2.weight));
-        } else if (!gene1 || !gene2) {
-            disjoint++;
-        }
-    });
+    if (gene1 && gene2) {
+      matching.push(Math.abs(gene1.weight - gene2.weight));
+    } else if (!gene1 || !gene2) {
+      disjoint++;
+    }
+  });
 
-    return (
-        (excess * config.excessCoefficient +
-            disjoint * config.disjointCoefficient) /
-            N +
-        mean(...matching) * config.weightDifferenceCoefficient
-    );
+  return (
+    (excess * config.excessCoefficient +
+      disjoint * config.disjointCoefficient) /
+      N +
+    mean(...matching) * config.weightDifferenceCoefficient
+  );
 }
 
-export function sigmoid(x, slope = 4.924273) {
-    return 1 / (1 + Math.exp(-slope * x));
+//export function sigmoid(x, slope = 4.924273) {
+export function sigmoid(x, slope = 1) {
+  return 1 / (1 + Math.exp(-slope * x));
 }
 
 /**
@@ -143,24 +140,21 @@ export function sigmoid(x, slope = 4.924273) {
  * @param connection
  * @param connections
  */
-export function isRecurrent(
-    connection,
-    connections
-): boolean {
-    const startNode = connection.from;
-    const stack = [connection];
+export function isRecurrent(connection, connections) {
+  const startNode = connection.from;
+  const stack = [connection];
 
-    while (stack.length) {
-        connection = stack.shift()!;
+  while (stack.length) {
+    connection = stack.shift();
 
-        if (connection.to.id === startNode.id) return true;
+    if (connection.to.id === startNode.id) return true;
 
-        stack.push(
-            ...connections.filter(gene => gene.from.id === connection.to.id)
-        );
-    }
+    stack.push(
+      ...connections.filter((gene) => gene.from.id === connection.to.id)
+    );
+  }
 
-    return false;
+  return false;
 }
 
 /**
@@ -168,71 +162,67 @@ export function isRecurrent(
  * @param genome1
  * @param genome2
  */
-export function crossover(
-    genome1: Organism,
-    genome2: Organism,
-    config: NEATConfig
-): Organism {
-    const child= new Organism();
+export function crossover(genome1, genome2, config) {
+  const child = new Organism();
 
-    // [moreFit, lessFit]
-    const [hFitParent, lFitParent] = [genome1, genome2].sort(
-        descending((i) => i.fitness)
-    );
+  // [moreFit, lessFit]
+  const [hFitParent, lFitParent] = [genome1, genome2].sort(
+    descending((i) => i.fitness)
+  );
 
-    let innovationNumbers = new Set([
-        ...hFitParent.connections.keys(),
-        ...lFitParent.connections.keys()
-    ]);
+  let innovationNumbers = new Set([
+    ...hFitParent.connections.keys(),
+    ...lFitParent.connections.keys()
+  ]);
 
-    // Ensure that all sensors and ouputs are added to the organism
-    hFitParent.nodes.forEach(node => {
-        if (isSensor(node) || isOutput(node)) child.addNode(node.copy());
+  // Ensure that all sensors and ouputs are added to the organism
+  hFitParent.nodes.forEach((node) => {
+    if (isSensor(node) || isOutput(node)) child.addNode(node.copy());
+  });
+
+  // lFitParent.nodes.forEach(node => {
+  //     switch (node.type) {
+  //         case NodeType.Input:
+  //         case NodeType.Output:
+  //         case NodeType.Hidden:
+  //             child.addNode(node.copy());
+  //     }
+  // });
+
+  Array.from(innovationNumbers.values())
+    .sort(ascending())
+    .forEach((innovationNumber) => {
+      const hConnection = hFitParent.connections.get(innovationNumber),
+        lConnection = lFitParent.connections.get(innovationNumber);
+
+      const connection =
+        hConnection && lConnection
+          ? // Matching gene
+            randomBool() &&
+            config.feedForwardOnly &&
+            !isRecurrent(hConnection, child.getConnections())
+            ? hConnection.copy()
+            : lConnection.copy()
+          : // excess/disjoint
+            (hConnection || lConnection).copy();
+
+      // Prevent the creation of RNNs if feed-forward only
+      if (
+        config.feedForwardOnly &&
+        isRecurrent(connection, child.getConnections())
+      )
+        return;
+
+      child.connections.set(innovationNumber, connection);
+
+      connection.from = connection.from.copy();
+      connection.to = connection.to.copy();
+
+      child.addNode(connection.from);
+      child.addNode(connection.to);
     });
 
-    // lFitParent.nodes.forEach(node => {
-    //     switch (node.type) {
-    //         case NodeType.Input:
-    //         case NodeType.Output:
-    //         case NodeType.Hidden:
-    //             child.addNode(node.copy());
-    //     }
-    // });
-
-    Array.from(innovationNumbers.values())
-        .sort(ascending())
-        .forEach(innovationNumber => {
-            const hConnection = hFitParent.connections.get(innovationNumber)!,
-                lConnection = lFitParent.connections.get(innovationNumber)!;
-
-            const connection =
-                hConnection && lConnection
-                    ? // Matching gene
-                      randomBool() &&
-                      config.feedForwardOnly &&
-                          !isRecurrent(hConnection, child.getConnections())
-                        ? hConnection.copy()
-                        : lConnection.copy()
-                    : // excess/disjoint
-                      (hConnection || lConnection).copy();
-
-            // Prevent the creation of RNNs if feed-forward only
-            if (
-                config.feedForwardOnly &&
-                isRecurrent(connection, child.getConnections())
-            )
-                return;
-
-            child.connections.set(innovationNumber, connection);
-
-            connection.from = connection.from.copy();
-            connection.to = connection.to.copy();
-
-            child.addNode(connection.from);
-            child.addNode(connection.to);
-        });
-
-    return child;
+  return child;
 }
 
 /**
@@ -241,21 +231,21 @@ export function crossover(
  * @param organism
  */
 export function mutateGenome(config, organism) {
-    if (rnd() < config.mutateAddNodeProbability) {
-        organism.mutateAddNode(config);
-    } else if (rnd() < config.mutateAddConnectionProbability) {
-        organism.mutateAddConnection(config);
-    } else {
-        if (rnd() < config.mutateConnectionWeightsProbability)
-            organism.mutateConnectionsWeights(config);
+  if (rnd() < config.mutateAddNodeProbability) {
+    organism.mutateAddNode(config);
+  } else if (rnd() < config.mutateAddConnectionProbability) {
+    organism.mutateAddConnection(config);
+  } else {
+    if (rnd() < config.mutateConnectionWeightsProbability)
+      organism.mutateConnectionsWeights(config);
 
-        if (rnd() < config.mutateToggleEnableProbability)
-            organism.mutateToggleEnable();
+    if (rnd() < config.mutateToggleEnableProbability)
+      organism.mutateToggleEnable();
 
-        if (rnd() < config.reEnableGeneProbability) organism.reEnableGene();
-    }
+    if (rnd() < config.reEnableGeneProbability) organism.reEnableGene();
+  }
 
-    return organism;
+  return organism;
 }
 
 /**
@@ -263,12 +253,12 @@ export function mutateGenome(config, organism) {
  * @param sortedSpecies A sorted set of species
  */
 export function getRandomSpecies(sortedSpecies) {
-    const random = Math.min(Math.round(<number>gaussian().next().value), 1);
-    const index = wrapNumber(0, sortedSpecies.length - 1, random);
-    // const multiplier = Math.min(gaussian().next().value / 4, 1);
-    // const index = Math.floor(multiplier * (species.length - 1) + 0.5);
+  const random = Math.min(Math.round(gaussian().next().value), 1);
+  const index = wrapNumber(0, sortedSpecies.length - 1, random);
+  // const multiplier = Math.min(gaussian().next().value / 4, 1);
+  // const index = Math.floor(multiplier * (species.length - 1) + 0.5);
 
-    return sortedSpecies[index];
+  return sortedSpecies[index];
 }
 
 /**
@@ -277,48 +267,44 @@ export function getRandomSpecies(sortedSpecies) {
  * @param organism
  * @param species
  */
-export function speciateOrganism(
-    config,
-    organism,
-    allSpecies
-) {
-    const { compatibilityThreshold } = config;
+export function speciateOrganism(config, organism, allSpecies) {
+  const { compatibilityThreshold } = config;
 
-    const found =
-        allSpecies.length > 0 &&
-        allSpecies.some((species) => {
-            if (!species.organisms.length) return false;
+  const found =
+    allSpecies.length > 0 &&
+    allSpecies.some((species) => {
+      if (!species.organisms.length) return false;
 
-            const isCompatible =
-                compatibility(organism, species.getSpecimen(), config) <
-                compatibilityThreshold;
+      const isCompatible =
+        compatibility(organism, species.getSpecimen(), config) <
+        compatibilityThreshold;
 
-            if (isCompatible) species.addOrganism(organism);
+      if (isCompatible) species.addOrganism(organism);
 
-            return isCompatible;
-        });
+      return isCompatible;
+    });
 
-    if (!found) {
-        const species = new Species();
-        species.addOrganism(organism);
-        allSpecies.push(species);
-    }
+  if (!found) {
+    const species = new Species();
+    species.addOrganism(organism);
+    allSpecies.push(species);
+  }
 }
 
 /**
  * Sorts an array from largest to smallest
  * @param keyFn
  */
-export function descending(keyFn = (i: any) => i) {
-    return (a, b) => keyFn(b) - keyFn(a);
+export function descending(keyFn = (i) => i) {
+  return (a, b) => keyFn(b) - keyFn(a);
 }
 
 /**
  * Sorts an array from smallest to largest
  * @param keyFn
  */
-export function ascending(keyFn = (i: any) => i) {
-    return (a, b) => keyFn(a) - keyFn(b);
+export function ascending(keyFn = (i) => i) {
+  return (a, b) => keyFn(a) - keyFn(b);
 }
 
 // TODO
@@ -334,23 +320,23 @@ export const byType = (i) => i.type;
  * @param value
  */
 export function wrapNumber(min, max, value) {
-    const l = max - min + 1;
-    return ((((value - min) % l) + l) % l) + min;
+  const l = max - min + 1;
+  return ((((value - min) % l) + l) % l) + min;
 }
 
 export const isSensor = (gene) => {
-    gene.type === NodeType.Input || gene.type === NodeType.Bias;
-}
+  gene.type === NodeType.Input || gene.type === NodeType.Bias;
+};
 
 export const isOutput = (gene) => {
-    gene.type === NodeType.Output;
-}
+  gene.type === NodeType.Output;
+};
 
 /**
  * Create a new innovation number generator
  */
 export function* Innovation(i = 0) {
-    while (true) yield i++;
+  while (true) yield i++;
 }
 
 /**
@@ -358,52 +344,45 @@ export function* Innovation(i = 0) {
  * @param config
  * @param topology
  */
-export function createGenome(
-    config,
-    {
-        input,
-        hidden,
-        output
+export function createGenome(config, { input, hidden, output }) {
+  const inputNodes = [],
+    outputNodes = [],
+    hiddenNodes = [],
+    connections = [];
+
+  for (let i = 0; i < output; i++) {
+    outputNodes.push(new NodeGene(NodeType.Output));
+  }
+
+  for (let i = 0; i < input; i++) {
+    const node = new NodeGene(NodeType.Input);
+    inputNodes.push(node);
+  }
+
+  let lastLayer = inputNodes;
+  for (let k = 0; k < hidden.length; k++) {
+    const layer = [];
+    for (let i = 0; i < hidden[k]; i++) {
+      const hiddenNode = new NodeGene(NodeType.Hidden);
+      hiddenNodes.push(hiddenNode);
+      layer.push(hiddenNode);
+
+      connections.push(new ConnectionGene(hiddenNode, hiddenNode));
+
+      lastLayer.forEach((from) => {
+        connections.push(new ConnectionGene(from, hiddenNode));
+      });
     }
-) {
-    const inputNodes = [],
-        outputNodes = [],
-        hiddenNodes = [],
-        connections = [];
+    lastLayer = layer;
+  }
 
-    for (let i = 0; i < output; i++) {
-        outputNodes.push(new NodeGene(NodeType.Output));
-    }
-
-    for (let i = 0; i < input; i++) {
-        const node = new NodeGene(NodeType.Input);
-        inputNodes.push(node);
-    }
-
-    let lastLayer = inputNodes;
-    for (let k = 0; k < hidden.length; k++) {
-        const layer = [];
-        for (let i = 0; i < hidden[k]; i++) {
-            const hiddenNode = new NodeGene(NodeType.Hidden);
-            hiddenNodes.push(hiddenNode);
-            layer.push(hiddenNode);
-
-            connections.push(new ConnectionGene(hiddenNode, hiddenNode));
-
-            lastLayer.forEach(from => {
-                connections.push(new ConnectionGene(from, hiddenNode));
-            });
-        }
-        lastLayer = layer;
-    }
-
-    outputNodes.forEach(output => {
-        lastLayer.forEach(from => {
-            connections.push(new ConnectionGene(from, output));
-        });
+  outputNodes.forEach((output) => {
+    lastLayer.forEach((from) => {
+      connections.push(new ConnectionGene(from, output));
     });
+  });
 
-    const nodes = [...inputNodes, ...hiddenNodes, ...outputNodes];
+  const nodes = [...inputNodes, ...hiddenNodes, ...outputNodes];
 
-    return { nodes, connections };
+  return { nodes, connections };
 }

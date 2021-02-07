@@ -1,14 +1,14 @@
-import Neuron from "./neuron.js";
+import Neuron, { NodeTypes } from "./neuron.js";
 import Connection from "./connection.js";
-//import { sigmoid } from "../utils";
+import { sigmoid } from "./utils";
 
 export default class Network {
   inputs = [];
   outputs = [];
   neurons = new Map();
-  //activation = sigmoid;
+  activation = sigmoid;
   state = [{}, {}];
-  connections;
+  connections = [];
 
   constructor(input_neurons = [], output_neurons = [], connections = []) {
     if (!Array.isArray(input_neurons)) {
@@ -69,19 +69,6 @@ export default class Network {
           : new Connection(connection.from, connection.to)
       );
     }
-
-    /*links
-            .filter(({ enabled }) => enabled)
-            .forEach(({ from, to, weight, enabled }) => {
-                const fromNeuron = this.neurons.get(from)!;
-                const toNeuron = this.neurons.get(to)!;
-                const link = new Link(fromNeuron, toNeuron, weight, enabled);
-
-                fromNeuron.out.push(link);
-                toNeuron.in.push(link);
-            });*/
-    //this.inputs = inputs;
-    //this.outputs = outputs;
   }
 
   /**
@@ -109,6 +96,7 @@ export default class Network {
    * @param neuron
    */
   addInputNeuron(neuron) {
+    neuron.type = NodeTypes.Input;
     this.addNeuron(neuron);
     this.inputs.push(neuron);
   }
@@ -118,6 +106,7 @@ export default class Network {
    * @param neuron
    */
   addOutputNeuron(neuron) {
+    neuron.type = NodeTypes.Output;
     this.addNeuron(neuron);
     this.outputs.push(neuron);
   }
@@ -127,8 +116,8 @@ export default class Network {
    * @param connection
    */
   addConnection(connection) {
-    const fromNeuron = this.neurons.get(connection.from);
-    const toNeuron = this.neurons.get(connection.to);
+    const fromNeuron = this.neurons.get(connection.from.id);
+    const toNeuron = this.neurons.get(connection.to.id);
 
     if (fromNeuron === undefined || toNeuron === undefined) {
       throw new Error(
@@ -136,36 +125,34 @@ export default class Network {
       );
     }
 
-    fromNeuron.out.push(connection);
-    toNeuron.in.push(connection);
+    fromNeuron.outbound_connections.push(connection);
+    toNeuron.inbound_connections.push(connection);
+    this.connections.push(connection);
   }
 
-  toJSON() {
-    const neruons = this.neurons;
-    const neurons = [],
-      links = [];
+  serialize() {
+    const json = { neurons: [], connections: [] };
 
-    neruons.forEach(({ id, bias, type, out }) => {
-      neurons.push({
+    for (let [id, neuron] of this.neurons) {
+      const { bias, type, outbound_connections } = neuron;
+
+      json.neurons.push({
         id,
         bias,
         type
       });
-      links.push(
-        ...out.map(({ from, to, weight, enabled }) => ({
+
+      json.connections.push(
+        ...outbound_connections.map(({ from, to, weight, enabled }) => ({
           from: from.id,
           to: to.id,
           weight,
           enabled
         }))
       );
-    });
+    }
 
-    return {
-      // config,
-      neurons,
-      links
-    };
+    return json;
   }
 
   /**
@@ -174,6 +161,7 @@ export default class Network {
    */
   activate(inputs) {
     const [state0, state1] = this.state;
+
     this.inputs.map((input, i) => {
       state0[input.id] = inputs[i];
       state1[input.id] = inputs[i];
@@ -181,28 +169,33 @@ export default class Network {
 
     const done = new Set();
     const stack = [...this.inputs];
+
     while (stack.length) {
       const neuron = stack.shift();
 
       if (done.has(neuron)) continue;
 
-      if (neuron.in.length) {
-        const dotProduct = neuron.in.reduce(
-          (sum, link) => (sum + state0[link.from.id]) * link.weight,
+      if (neuron.inbound_connections.length) {
+        const dotProduct = neuron.inbound_connections.reduce(
+          (sum, connection) =>
+            (sum + state0[connection.from.id]) * connection.weight,
           0
         );
 
         state1[neuron.id] = this.activation(dotProduct + neuron.bias);
       }
+
       done.add(neuron);
+
       stack.push(
-        ...neuron.out
-          .filter((l) => stack.indexOf(l.to) === -1)
-          .map((link) => link.to)
+        ...neuron.outbound_connections
+          .filter((connection) => stack.indexOf(connection.to) === -1)
+          .map((connection) => connection.to)
       );
     }
 
     this.state.reverse();
+
     return this.outputs.map((output) => state1[output.id]);
   }
 }
