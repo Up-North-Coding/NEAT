@@ -15,7 +15,7 @@ describe("The connection class", () => {
     }).toThrow();
   });
 
-  test("should update the weight and enabled status with the third and forth constructor args", () => {
+  test("should update the weight and enabled status with the third and fourth constructor args", () => {
     const from = new Neuron(1);
     const to = new Neuron(2);
     const connection = new Connection(from, to, 1, false);

@@ -1,15 +1,15 @@
-import Neuron, { NodeTypes } from "../neuron.js";
-import Connection from "../connection.js";
-import Network from "../network.js";
+import { v4 as uuid } from "uuid";
+import NodeGene from "../gene-node.js";
+import ConnectionGene from "../gene-connection.js";
+import Genome from "../genome.js";
 
-describe("The network class", () => {
-  test("should throw an error if the first argument if not an array", () => {
-    expect(() => {
-      new Network("not an array");
-    }).toThrow();
+describe("The genome class", () => {
+  test("should generate a UUID if the first argument is not an ID", () => {
+    const genome = new Genome();
+    expect(genome.id.length).toBeGreaterThan(0);
   });
 
-  test("should throw an error if the second argument if not an array", () => {
+  /*test("should throw an error if the second argument if not an array", () => {
     const neurons = [new Neuron(1), { id: 2 }, new Neuron(3)];
 
     expect(() => {
@@ -127,8 +127,8 @@ describe("The network class", () => {
     const outputs = network.activate(inputs);
 
     // Weighted sum of inputs is going to be 0, because weight is not currently set
-    const expected_outputs = [0.92144, 0.92144];
+    const expected_outputs = [0.62245, 0.62245];
     expect(outputs[0]).toBeCloseTo(expected_outputs[0], 4);
     expect(outputs[1]).toBeCloseTo(expected_outputs[1], 4);
-  });
+  });*/
 });
