@@ -313,7 +313,9 @@ export const isOutput = (gene) => {
  * Create a new innovation number generator
  */
 export function* Innovation(i = 0) {
-  while (true) yield i++;
+  while (true) {
+    yield i++;
+  }
 }
 
 /**

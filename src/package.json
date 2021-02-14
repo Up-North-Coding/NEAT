@@ -7,7 +7,9 @@
     "scripts": {
         "prestart": "echo [.] Installing npm dependencies... && npm install",
         "pretest": "echo [.] Installing npm dependencies... && npm install",
-        "test": "jest --watchAll"
+        "test": "jest --watchAll",
+        "precoverage": "npm run pretest",
+        "coverage": "jest --collect-coverage"
     },
     "dependencies": {
         "@babel/runtime": "^7.8.3",

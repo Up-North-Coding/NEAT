@@ -39,4 +39,14 @@ describe("The gene connection class", () => {
     expect(connection_gene.enabled === copy.enabled).toBe(true);
     expect(connection_gene.innovation === copy.innovation).toBe(true);
   });
+
+  test("should set 'enabled' to false when the disable function is called", () => {
+    const from = new NodeGene();
+    const to = new NodeGene();
+    const connection_gene = new ConnectionGene(from, to, 1, true, 0.5);
+
+    expect(connection_gene.enabled).toBe(true);
+    connection_gene.disable();
+    expect(connection_gene.enabled).toBe(false);
+  });
 });

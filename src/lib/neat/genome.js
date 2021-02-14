@@ -27,7 +27,7 @@ export class Genome {
     }
 
     for (let [key, gene] of this.nodes) {
-      genome.nodes.set(key, node.copy());
+      genome.nodes.set(key, gene.copy());
     }
 
     return genome;

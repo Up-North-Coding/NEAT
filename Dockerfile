@@ -16,7 +16,7 @@ USER node
 # Make /app the working directory
 WORKDIR /app
 
-COPY --chown=node:node src/package.json /src/package.json
+COPY --chown=node:node src/package.json /app/package.json
 RUN npm install
 
 # Now copy all of the src into /app
