@@ -46,7 +46,6 @@ export class Genome {
    * @param node2
    */
   connectionExists(node1, node2) {
-    // TODO: Gain performance via short circuit evaluation intead of creating a whole array from values?
     return Array.from(this.connections.values()).some(
       (connection) =>
         connection.from.id === node1.id && connection.to.id === node2.id
