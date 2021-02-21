@@ -10,47 +10,31 @@ export default class Network {
   state = [{}, {}];
   connections = [];
 
-  constructor(input_neurons = [], output_neurons = [], connections = []) {
-    if (!Array.isArray(input_neurons)) {
+  constructor(neurons = [], connections = []) {
+    if (!Array.isArray(neurons)) {
       throw new Error(
         "Network constructor requires an array as the first argument"
       );
     }
 
-    if (!Array.isArray(output_neurons)) {
+    if (!Array.isArray(connections)) {
       throw new Error(
         "Network constructor requires an array as the second argument"
       );
     }
 
-    if (!Array.isArray(connections)) {
-      throw new Error(
-        "Network constructor requires an array as the third argument"
-      );
-    }
+    const id_to_neuron_cache = {};
 
-    for (let neuron of input_neurons) {
+    for (let neuron of neurons) {
       if (!(neuron instanceof Neuron) && neuron?.id === undefined) {
         throw new Error(
           "Network constructor requires an array of {} with ID property or Neurons"
         );
       }
 
-      this.addInputNeuron(
-        neuron instanceof Neuron ? neuron : new Neuron(neuron.id)
-      );
-    }
-
-    for (let neuron of output_neurons) {
-      if (!(neuron instanceof Neuron) && neuron?.id === undefined) {
-        throw new Error(
-          "Network constructor requires an array of {} with ID property or Neurons"
-        );
-      }
-
-      let output_neuron = this.addOutputNeuron(
-        neuron instanceof Neuron ? neuron : new Neuron(neuron.id)
-      );
+      const _neuron =
+        neuron instanceof Neuron ? neuron : new Neuron(neuron.id, neuron.type);
+      this.addNeuron(_neuron);
     }
 
     for (let connection of connections) {
@@ -66,7 +50,10 @@ export default class Network {
       this.addConnection(
         connection instanceof Connection
           ? connection
-          : new Connection(connection.from, connection.to)
+          : new Connection(
+              this.neurons.get(connection.from),
+              this.neurons.get(connection.to)
+            )
       );
     }
   }
@@ -86,29 +73,15 @@ export default class Network {
       throw new Error("Duplicate neuron ID");
     }
 
+    if (neuron.type === NodeTypes.Input) {
+      this.inputs.push(neuron);
+    } else if (neuron.type === NodeTypes.Output) {
+      this.outputs.push(neuron);
+    }
+
     this.neurons.set(neuron.id, neuron);
     this.state[0][neuron.id] = 0;
     this.state[1][neuron.id] = 0;
-  }
-
-  /**
-   * Adds a neuron to the neural network and adds it to the inputs
-   * @param neuron
-   */
-  addInputNeuron(neuron) {
-    neuron.type = NodeTypes.Input;
-    this.addNeuron(neuron);
-    this.inputs.push(neuron);
-  }
-
-  /**
-   * Adds a neuron to the neural network and adds it to the outputs
-   * @param neuron
-   */
-  addOutputNeuron(neuron) {
-    neuron.type = NodeTypes.Output;
-    this.addNeuron(neuron);
-    this.outputs.push(neuron);
   }
 
   /**

@@ -8,7 +8,7 @@ import { ascending } from "./utils.js";
  * Organisms are Genomes and Networks with fitness informations
  * i.e. The genotype and phenotype together
  */
-export class Organism extends Genome {
+class Organism extends Genome {
   /**
    * A measure of fitness for the organism
    */
@@ -33,7 +33,6 @@ export class Organism extends Genome {
    * Number of children this Organism may have
    */
   expectedOffspring = 0;
-
   network = null;
 
   constructor(fitness = 0, generation = 0) {
@@ -73,3 +72,5 @@ export class Organism extends Genome {
     return this.network;
   }
 }
+
+export default Organism;

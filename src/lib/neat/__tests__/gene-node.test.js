@@ -4,7 +4,7 @@ describe("The node gene class", () => {
   test("should set the ID in the constructor", () => {
     const node_gene = new NodeGene(1);
 
-    expect(node_gene).toHaveProperty("id", 1);
+    expect(node_gene.id).toBe(1);
   });
 
   test("should set a UUID as the ID if none is passed in the constructor", () => {
