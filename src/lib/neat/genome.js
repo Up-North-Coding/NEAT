@@ -2,9 +2,16 @@ import { v4 as uuid } from "uuid";
 import ConnectionGene from "./gene-connection.js";
 import NodeGene from "./gene-node.js";
 import { NodeTypes } from "../neural-net/neuron.js";
-import { rand, getRandomItems } from "./utils.js";
+import {
+  rand,
+  getRandomItems,
+  mean,
+  ascending,
+  descending,
+  randomBool
+} from "./utils.js";
 
-export class Genome {
+class Genome {
   connections = new Map();
   nodes = new Map();
   id = "";
@@ -66,6 +73,7 @@ export class Genome {
 
     const non_output_nodes = nodes.filter((node) => !NodeGene.isOutput(node));
     const non_sensor_nodes = nodes.filter((node) => !NodeGene.isSensor(node));
+
     for (let i = config.addConnectionTries; i > 0; i--) {
       const [from] = getRandomItems(non_output_nodes, 1);
 
@@ -92,8 +100,9 @@ export class Genome {
         // connection already exists
         !this.connectionExists(from, to) &&
         // is a RNN
-        (!config.feedForwardOnly ||
-          !ConnectionGene.isRecurrent(connection, connections));
+        !(
+          config.feedForwardOnly && Genome.isRecurrent(connection, connections)
+        );
 
       if (isValid) {
         this.addConnection(config, connection);
@@ -222,7 +231,7 @@ export class Genome {
    * @param genome2
    */
   static crossover(genome1, genome2, config) {
-    const child = new Organism();
+    const child = new Genome();
 
     // [moreFit, lessFit]
     const [hFitParent, lFitParent] = [genome1, genome2].sort(
@@ -236,17 +245,10 @@ export class Genome {
 
     // Ensure that all sensors and ouputs are added to the organism
     hFitParent.nodes.forEach((node) => {
-      if (isSensor(node) || isOutput(node)) child.addNode(node.copy());
+      if (NodeGene.isSensor(node) || NodeGene.isOutput(node)) {
+        child.addNode(node.copy());
+      }
     });
-
-    // lFitParent.nodes.forEach(node => {
-    //     switch (node.type) {
-    //         case NodeType.Input:
-    //         case NodeType.Output:
-    //         case NodeType.Hidden:
-    //             child.addNode(node.copy());
-    //     }
-    // });
 
     Array.from(innovationNumbers.values())
       .sort(ascending())
@@ -254,23 +256,17 @@ export class Genome {
         const hConnection = hFitParent.connections.get(innovationNumber),
           lConnection = lFitParent.connections.get(innovationNumber);
 
-        const connection =
-          hConnection && lConnection
-            ? // Matching gene
-              randomBool() &&
-              config.feedForwardOnly &&
-              !ConnectionGene.isRecurrent(hConnection, child.getConnections())
-              ? hConnection.copy()
-              : lConnection.copy()
-            : // excess/disjoint
-              (hConnection || lConnection).copy();
+        let connection = hConnection || lConnection;
+        if (hConnection && lConnection) {
+          connection = randomBool() ? hConnection : lConnection;
+        }
 
-        // Prevent the creation of RNNs if feed-forward only
         if (
           config.feedForwardOnly &&
-          ConnectionGene.isRecurrent(connection, child.getConnections())
-        )
-          return;
+          Genome.isRecurrent(connection, child.getConnections())
+        ) {
+          return null;
+        }
 
         child.connections.set(innovationNumber, connection);
 
@@ -286,73 +282,51 @@ export class Genome {
 
   /**
    * Perform genome's mutations
+   * @param genome
    * @param config
-   * @param organism
    */
-  static mutateGenome(config, organism) {
+  static mutateGenome(genome, config) {
     if (rand() < config.mutateAddNodeProbability) {
-      organism.mutateAddNode(config);
+      genome.mutateAddNode(config);
     } else if (rand() < config.mutateAddConnectionProbability) {
-      organism.mutateAddConnection(config);
+      genome.mutateAddConnection(config);
     } else {
-      if (rand() < config.mutateConnectionWeightsProbability)
-        organism.mutateConnectionsWeights(config);
-
-      if (rand() < config.mutateToggleEnableProbability)
-        organism.mutateToggleEnable();
-
-      if (rand() < config.reEnableGeneProbability) organism.reEnableGene();
+      if (rand() < config.mutateConnectionWeightsProbability) {
+        genome.mutateConnectionsWeights(config);
+      }
+      if (rand() < config.mutateToggleEnableProbability) {
+        genome.mutateToggleEnable();
+      }
+      if (rand() < config.reEnableGeneProbability) {
+        genome.reEnableGene();
+      }
     }
 
-    return organism;
+    return genome;
   }
 
   /**
-   * Creates a genome with the specified topology
-   * @param config
-   * @param topology
+   * Check whether the connection creates a loop inside the network
+   * @param connection
+   * @param connections
    */
-  static createGenome(config, { input, hidden, output }) {
-    const inputNodes = [],
-      outputNodes = [],
-      hiddenNodes = [],
-      connections = [];
+  static isRecurrent(connection, connections) {
+    const startNode = connection.from;
+    const stack = [connection];
 
-    for (let i = 0; i < output; i++) {
-      outputNodes.push(new NodeGene(NodeType.Output));
-    }
+    while (stack.length) {
+      connection = stack.shift();
 
-    for (let i = 0; i < input; i++) {
-      const node = new NodeGene(NodeType.Input);
-      inputNodes.push(node);
-    }
-
-    let lastLayer = inputNodes;
-    for (let k = 0; k < hidden.length; k++) {
-      const layer = [];
-      for (let i = 0; i < hidden[k]; i++) {
-        const hiddenNode = new NodeGene(NodeType.Hidden);
-        hiddenNodes.push(hiddenNode);
-        layer.push(hiddenNode);
-
-        connections.push(new ConnectionGene(hiddenNode, hiddenNode));
-
-        lastLayer.forEach((from) => {
-          connections.push(new ConnectionGene(from, hiddenNode));
-        });
+      if (connection.to.id === startNode.id) {
+        return true;
       }
-      lastLayer = layer;
+
+      stack.push(
+        ...connections.filter((gene) => gene.from.id === connection.to.id)
+      );
     }
 
-    outputNodes.forEach((output) => {
-      lastLayer.forEach((from) => {
-        connections.push(new ConnectionGene(from, output));
-      });
-    });
-
-    const nodes = [...inputNodes, ...hiddenNodes, ...outputNodes];
-
-    return { nodes, connections };
+    return false;
   }
 }
 

@@ -1,6 +1,6 @@
 import Neuron, { NodeTypes } from "./neuron.js";
 import Connection from "./connection.js";
-import { sigmoid } from "./utils";
+import { sigmoid } from "../neat/utils.js";
 
 export default class Network {
   inputs = [];

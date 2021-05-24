@@ -40,28 +40,6 @@ class ConnectionGene {
       this.innovation
     );
   }
-
-  /**
-   * Check whether the connection creates a loop inside the network
-   * @param connection
-   * @param connections
-   */
-  static isRecurrent(connection, connections) {
-    const startNode = connection.from;
-    const stack = [connection];
-
-    while (stack.length) {
-      connection = stack.shift();
-
-      if (connection.to.id === startNode.id) return true;
-
-      stack.push(
-        ...connections.filter((gene) => gene.from.id === connection.to.id)
-      );
-    }
-
-    return false;
-  }
 }
 
 export default ConnectionGene;

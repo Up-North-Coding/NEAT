@@ -1,4 +1,4 @@
-import { Species } from "./Species";
+import Species from "./species.js";
 import { Organism } from "./Organism";
 import { speciateOrganism, descending } from "../utils";
 import Network from "../network/Network";

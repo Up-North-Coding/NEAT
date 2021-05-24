@@ -46,7 +46,7 @@ export function rand(to = 1, from = 0) {
 }
 
 /**
- * Returns a normally distribuited random number (Box-Muller transform)
+ * Returns a normally distributed random number (Box-Muller transform)
  */
 export function* gaussian(mean = 0, standardDeviation = 1) {
   let u, v, s;
@@ -65,10 +65,9 @@ export function* gaussian(mean = 0, standardDeviation = 1) {
   }
 }
 
-//export function sigmoid(x, slope = 4.924273) {
-export function sigmoid(x, slope = 1) {
-  return 1 / (1 + Math.exp(-slope * x));
-}
+const sigmoid_slope = 4.924273;
+export const sigmoid = (x, slope = sigmoid_slope) =>
+  1 / (1 + Math.exp(-slope * x));
 
 /**
  * Sorts an array from largest to smallest

@@ -1,4 +1,3 @@
-//import Species from './species.js';
 import Genome from "./genome.js";
 import ConnectionGene from "./gene-connection.js";
 import Network from "../neural-net/network.js";

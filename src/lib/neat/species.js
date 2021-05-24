@@ -1,16 +1,6 @@
-import { Organism } from "./Organism";
-import {
-  rand,
-  getRandomItems,
-  mutateGenome,
-  getRandomSpecies,
-  compatibility,
-  crossover,
-  speciateOrganism,
-  descending
-} from "../utils";
-import { Population } from "./Population";
-import { NEATConfig } from "../types";
+import Organism from "./organism.js";
+import { rand, getRandomItems, mutateGenome, descending } from "../utils";
+import Population from "./population.js";
 
 export class Species {
   /**
@@ -51,7 +41,9 @@ export class Species {
       throw new Error(`Species.addOrganism requires an Organism`);
     }
 
-    if (!this.specimen) this.specimen = organism;
+    if (!this.specimen) {
+      this.specimen = organism;
+    }
 
     this.organisms.push(organism);
     organism.species = this;
