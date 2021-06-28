@@ -5,9 +5,8 @@ import { ascending } from "./utils.js";
 
 /**
  * Organisms are Genomes and Networks with fitness informations
- * i.e. The genotype and phenotype together
  */
-class Organism extends Genome {
+class Organism {
   /**
    * A measure of fitness for the organism
    */
@@ -32,31 +31,40 @@ class Organism extends Genome {
    * Number of children this Organism may have
    */
   expectedOffspring = 0;
+  /**
+   * The Genome associated with this Organism
+   */
+  genome = null;
+  /**
+   * The neural net associated with the Genome
+   */
   network = null;
 
   constructor(fitness = 0, generation = 0) {
-    super();
     this.fitness = fitness;
     this.generation = generation;
   }
 
   copy(fitness = 0, generation = 0) {
-    let clone = super.copy();
+    let clone = new Organism();
     clone.fitness = fitness;
     clone.generation = generation;
     clone.originalFitness = this.originalFitness;
+    clone.genome = this.genome.copy();
 
     return clone;
   }
 
   getNetwork() {
     if (!this.network) {
-      const nodes = Array.from(this.nodes.values()).map(({ type, id }) => ({
-        type,
-        id
-      }));
+      const nodes = Array.from(this.genome.nodes.values()).map(
+        ({ type, id }) => ({
+          type,
+          id
+        })
+      );
 
-      const connections = Array.from(this.connections.values())
+      const connections = Array.from(this.genome.connections.values())
         .sort(ascending((i) => i.innovation))
         .map(({ from, to, weight, enabled }) => ({
           from: from.id,

@@ -1,8 +1,15 @@
 import Organism from "./organism.js";
-import { rand, getRandomItems, mutateGenome, descending } from "../utils";
+import Genome from "./genome.js";
 import Population from "./population.js";
+import {
+  rand,
+  getRandomItems,
+  descending,
+  gaussian,
+  wrapNumber
+} from "./utils.js";
 
-export class Species {
+class Species {
   /**
    * The organisms of the species
    */
@@ -37,7 +44,7 @@ export class Species {
   expectedOffspring = 0;
 
   addOrganism(organism) {
-    if (!organism instanceof Organism) {
+    if (!(organism instanceof Organism)) {
       throw new Error(`Species.addOrganism requires an Organism`);
     }
 
@@ -81,6 +88,7 @@ export class Species {
         organism.fitness *= config.ageSignificance;
       }
 
+      // Simplified version of explicit fitness sharing designed to punish species that get too big
       organism.fitness =
         Math.max(organism.fitness, 0.0001) / this.organisms.length;
 
@@ -102,14 +110,14 @@ export class Species {
       this.organisms.length * config.survivalThreshold + 1
     );
 
-    for (let i = removeFrom; i < this.organisms.length; i++)
+    for (let i = removeFrom; i < this.organisms.length; i++) {
       this.organisms[i].kill = true;
+    }
   }
 
   /**
-   * Perform mating and mutation to form next generation.
+   * Perform mating and mutation and speciates the specimens with the appropriate generation number. Does not remove old generation.
    * The sorted_species is ordered to have best species in the beginning.
-   * Returns list of baby organisms as a result of reproduction of all organisms in this species.
    * @param generation
    */
   reproduce(config, generation, superChamp, sortedSpecies) {
@@ -121,8 +129,8 @@ export class Species {
     const champ = babies[0];
     let champAdded = false;
 
-    for (let i = 0; i < expectedOffspring; i++) {
-      let baby;
+    for (let i = 0; i < this.expectedOffspring; i++) {
+      let baby = new Organism(0, generation);
 
       if (
         superChamp &&
@@ -133,13 +141,13 @@ export class Species {
         let organism = superChamp.copy(0, generation);
 
         if (superChamp.expectedOffspring === 1) {
-          organism = mutateGenome(config, organism);
+          organism = Genome.mutateGenome(organism.genome, config);
         }
 
         superChamp.expectedOffspring--;
 
         baby = organism;
-      } else if (!champAdded && expectedOffspring > 5) {
+      } else if (!champAdded && this.expectedOffspring > 5) {
         // Champion of species with more than 5 networks is copied unchanged
         baby = champ.copy(0, generation);
         champAdded = true;
@@ -147,7 +155,10 @@ export class Species {
         // Mutate only
         const [mom] = getRandomItems(babies, 1);
 
-        baby = mutateGenome(config, mom.copy(0, generation));
+        baby.genome = Genome.mutateGenome(
+          mom.copy(0, generation).genome,
+          config
+        );
       } else {
         // mate
         const [mom] = getRandomItems(babies, 1);
@@ -161,7 +172,7 @@ export class Species {
             randomSpecies = this;
 
           while (randomSpecies === this && tries++ < 5) {
-            const species = getRandomSpecies(sortedSpecies);
+            const species = Species.getRandomSpecies(sortedSpecies);
             if (species.organisms.length) {
               randomSpecies = species;
             }
@@ -170,18 +181,18 @@ export class Species {
           dad = randomSpecies.getChampion();
         }
 
-        baby = crossover(dad, mom, config);
+        baby.genome = Genome.crossover(dad.genome, mom.genome, config);
 
         if (
           rand() < config.mutateOnlyProbability ||
-          compatibility(mom, dad, config) === 0
+          Genome.compatibility(mom.genome, dad.genome, config) === 0
         ) {
-          mutateGenome(config, baby);
+          Genome.mutateGenome(baby.genome, config);
         }
       }
 
       baby.generation = generation;
-      speciateOrganism(config, baby, sortedSpecies);
+      Species.speciateOrganism(config, baby, sortedSpecies);
     }
   }
 
@@ -210,13 +221,20 @@ export class Species {
     const found =
       allSpecies.length > 0 &&
       allSpecies.some((species) => {
-        if (!species.organisms.length) return false;
+        if (!species.organisms.length) {
+          return false;
+        }
 
         const isCompatible =
-          compatibility(organism, species.getSpecimen(), config) <
-          compatibilityThreshold;
+          Genome.compatibility(
+            organism.genome,
+            species.getSpecimen().genome,
+            config
+          ) < compatibilityThreshold;
 
-        if (isCompatible) species.addOrganism(organism);
+        if (isCompatible) {
+          species.addOrganism(organism);
+        }
 
         return isCompatible;
       });
@@ -228,3 +246,5 @@ export class Species {
     }
   }
 }
+
+export default Species;

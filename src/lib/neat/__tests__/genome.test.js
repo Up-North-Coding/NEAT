@@ -237,7 +237,8 @@ describe("The genome class", () => {
       mutateAddNodeProbability: -1,
       mutateAddConnectionProbability: -1,
       mutateConnectionWeightsProbability: -1,
-      mutateToggleEnableProbability: 1
+      mutateToggleEnableProbability: 1,
+      reEnableGeneProbability: -1
     });
     expect(mutated_genome.getConnections().length).toBeLessThan(
       enabled_connections_count

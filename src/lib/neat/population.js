@@ -1,11 +1,10 @@
 import Species from "./species.js";
-import { Organism } from "./Organism";
-import { speciateOrganism, descending } from "../utils";
-import Network from "../network/Network";
-import { ConnectionGene } from "./ConnectionGene";
-import { NodeGene } from "./NodeGene";
-import { FitnessFunction, NEATConfig } from "../types";
+import Organism from "./organism.js";
+import Network from "../neural-net/network.js";
+import ConnectionGene from "./gene-connection.js";
+import NodeGene from "./gene-node.js";
 import DefaultConfig from "./default-config.js";
+import { descending } from "./utils.js";
 
 export class Population {
   size = 0;

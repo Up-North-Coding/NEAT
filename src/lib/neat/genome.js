@@ -112,7 +112,9 @@ class Genome {
   }
 
   mutateAddNode(config) {
-    if (!this.connections.size) return;
+    if (this.getConnections().length === 0) {
+      return;
+    }
 
     const [connection] = getRandomItems(this.getConnections(), 1);
 
