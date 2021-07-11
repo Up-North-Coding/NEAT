@@ -6,7 +6,7 @@ import NodeGene from "./gene-node.js";
 import DefaultConfig from "./default-config.js";
 import { descending } from "./utils.js";
 
-export class Population {
+class Population {
   size = 0;
   species = [];
   organisms = [];
@@ -18,23 +18,22 @@ export class Population {
     this.config = config;
   }
 
-  save() {
-    console.error("not implemented");
-  }
-
   static from(config, { nodes, connections }) {
     const population = new Population(config);
     const organism = new Organism();
 
-    nodes.forEach((node) => organism.addNode(node));
-    connections.forEach((connection) =>
-      organism.addConnection(config, connection)
-    );
+    for (let node of nodes) {
+      organism.genome.addNode(node);
+    }
+
+    for (let connection of connections) {
+      organism.genome.addConnection(config, connection);
+    }
 
     const size = config.populationSize;
     for (let i = 0; i < size; i++) {
       const organismCopy = organism.copy();
-      organismCopy.mutateConnectionsWeights(config);
+      organismCopy.genome.mutateConnectionsWeights(config);
       population.addOrganism(organismCopy);
     }
 
@@ -63,9 +62,9 @@ export class Population {
   }
 
   speciate() {
-    this.organisms.forEach((organism) =>
-      speciateOrganism(this.config, organism, this.species)
-    );
+    for (let organism of this.organisms) {
+      Species.speciateOrganism(this.config, organism, this.species);
+    }
   }
 
   epoch() {
@@ -92,12 +91,12 @@ export class Population {
 
     let overallAverage = 0;
     // Adjust fitness of species' organisms
-    species.forEach((species) => {
-      species.adjustFitness(config);
-      overallAverage += species.averageFitness;
-    });
+    for (let specie of species) {
+      specie.adjustFitness(config);
+      overallAverage += specie.averageFitness;
+    }
 
-    organisms.forEach((organism, i) => {
+    for (let organism of organisms) {
       // Remove all organisms marked for death
       if (organism.kill) {
         this.removeOrganism(organism);
@@ -108,25 +107,25 @@ export class Population {
           organism.originalFitness / overallAverage
         );
       }
-    });
+    }
 
     const sortedSpecies = [...species].sort(descending((i) => i.maxFitness));
 
     let superChamp = this.getSuperChamp();
 
     // Reproduce all species
-    sortedSpecies.forEach((species) => {
-      species.expectedOffspring = Math.round(
-        (species.averageFitness / overallAverage) * this.size
+    for (let specie of sortedSpecies) {
+      specie.expectedOffspring = Math.round(
+        (specie.averageFitness / overallAverage) * this.size
       );
-      species.reproduce(config, generation, superChamp, sortedSpecies);
-    });
+      specie.reproduce(config, generation, superChamp, sortedSpecies);
+    }
 
     // Remove all the organism from the old generation
-    [...this.organisms].forEach((organism) => {
+    for (let organism of [...this.organisms]) {
       this.removeOrganism(organism);
       organism.species.removeOrganism(organism);
-    });
+    }
 
     // Add species' organisms to current generation
     this.species = species.filter((species) => {
@@ -154,7 +153,7 @@ export class Population {
           const network = organism.getNetwork();
           organism.fitness = await fitnessFn(network, organism, this);
 
-          if (organism.fitness >= config.fitnessThreshold) {
+          if (organism.fitness >= this.config.fitnessThreshold) {
             return resolve(organism);
           }
         }
@@ -165,3 +164,5 @@ export class Population {
     });
   }
 }
+
+export default Population;

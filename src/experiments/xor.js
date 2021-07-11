@@ -1,9 +1,10 @@
 import Network from "../lib/neural-net/network.js";
 import DefaultConfig from "../lib/neat/default-config.js";
-import { Population } from "../lib/neat/population.js";
-import { Organism } from "../lib/neat/organism.js";
-import { NodeGene } from "../lib/neat/gene-node.js";
-import { ConnectionGene } from "../lib/neat/gene-connection.js";
+import Population from "../lib/neat/population.js";
+import Organism from "../lib/neat/organism.js";
+import NodeGene from "../lib/neat/gene-node.js";
+import ConnectionGene from "../lib/neat/gene-connection.js";
+import { NodeTypes } from "../lib/neural-net/neuron.js";
 
 const testData = [
   [[0, 0, 1], 0],
@@ -28,9 +29,9 @@ let config = {
 };
 
 let nodes = [
-  new NodeGene(NodeType.Input, "0"),
-  new NodeGene(NodeType.Input, "1"),
-  new NodeGene(NodeType.Output, "output")
+  new NodeGene(NodeTypes.Input, "0"),
+  new NodeGene(NodeTypes.Input, "1"),
+  new NodeGene(NodeTypes.Output, "output")
 ];
 let connections = [
   new ConnectionGene(nodes[0], nodes[2]),

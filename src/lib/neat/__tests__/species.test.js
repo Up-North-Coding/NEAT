@@ -120,11 +120,46 @@ describe("The species class", () => {
     species.addOrganism(organism2);
     species.addOrganism(organism3);
 
-    species.expectedOffspring = 10000;
     const allSpecies = [species];
 
+    // To get coverage on a default case
+    species.expectedOffspring = 0;
+    // Should return immediately
+    species.reproduce(DefaultConfig, 1, null, allSpecies);
+
+    // Now test out the full speciation mechanism
+    species.expectedOffspring = 10000;
     // This will create a new generation according to the config and speciate it according to compatibility threshold
     species.reproduce(DefaultConfig, 1, null, allSpecies);
+
+    // Sum up organisms across all species to reach expectedOffspring + original population
+    const total_organisms = allSpecies.reduce(
+      (sum, species) => sum + species.organisms.length,
+      0
+    );
+
+    expect(total_organisms).toEqual(species.expectedOffspring + 3);
+  });
+
+  test("reproduce() should return a new list of baby organisms with a super champ", () => {
+    const species = setup_test_species();
+    const { organism: organism3 } = setup_test_organism();
+    organism3.fitness = 30;
+    const { organism: organism1 } = setup_test_organism();
+    organism1.fitness = 20;
+    const { organism: organism2 } = setup_test_organism();
+    organism2.fitness = 10;
+    species.addOrganism(organism1);
+    species.addOrganism(organism2);
+    species.addOrganism(organism3);
+
+    const allSpecies = [species];
+
+    // Now test out the full speciation mechanism
+    organism1.expectedOffspring = 5;
+    species.expectedOffspring = 100;
+    // This will create a new generation according to the config and speciate it according to compatibility threshold
+    species.reproduce(DefaultConfig, 1, organism1, allSpecies);
 
     // Sum up organisms across all species to reach expectedOffspring + original population
     const total_organisms = allSpecies.reduce(

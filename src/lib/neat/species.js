@@ -141,7 +141,7 @@ class Species {
         let organism = superChamp.copy(0, generation);
 
         if (superChamp.expectedOffspring === 1) {
-          organism = Genome.mutateGenome(organism.genome, config);
+          organism.genome = Genome.mutateGenome(organism.genome, config);
         }
 
         superChamp.expectedOffspring--;

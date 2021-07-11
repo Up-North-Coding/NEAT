@@ -43,6 +43,7 @@ class Organism {
   constructor(fitness = 0, generation = 0) {
     this.fitness = fitness;
     this.generation = generation;
+    this.genome = new Genome();
   }
 
   copy(fitness = 0, generation = 0) {
