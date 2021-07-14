@@ -52,7 +52,9 @@ export default class Network {
           ? connection
           : new Connection(
               this.neurons.get(connection.from),
-              this.neurons.get(connection.to)
+              this.neurons.get(connection.to),
+              connection.weight,
+              connection.enabled
             )
       );
     }

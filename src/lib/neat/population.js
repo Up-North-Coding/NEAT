@@ -45,7 +45,7 @@ class Population {
   getSuperChamp() {
     return this.organisms.length
       ? this.organisms.reduce((champ, organism) =>
-          organism.originalFitness > champ.originalFitness ? organism : champ
+          organism.fitness > champ.fitness ? organism : champ
         )
       : null;
   }
@@ -141,11 +141,9 @@ class Population {
 
       return true;
     });
-
-    // this.speciate();
   }
 
-  run(fitnessFn, maxRuns = Infinity, delay) {
+  run(fitnessFn, maxRuns = Infinity, update = () => null) {
     return new Promise(async (resolve, reject) => {
       const isInfinite = !Number.isFinite(maxRuns);
       while (isInfinite || maxRuns--) {
@@ -158,6 +156,7 @@ class Population {
           }
         }
 
+        update(this);
         this.epoch();
       }
       reject();

@@ -21,7 +21,7 @@ class Genome {
   }
 
   copy() {
-    const genome = new Genome(this.id);
+    const genome = new Genome();
 
     for (let [key, gene] of this.connections) {
       genome.connections.set(key, gene.copy());

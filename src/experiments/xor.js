@@ -5,6 +5,7 @@ import Organism from "../lib/neat/organism.js";
 import NodeGene from "../lib/neat/gene-node.js";
 import ConnectionGene from "../lib/neat/gene-connection.js";
 import { NodeTypes } from "../lib/neural-net/neuron.js";
+import readline from "readline";
 
 const testData = [
   [[0, 0, 1], 0],
@@ -16,22 +17,22 @@ const testData = [
 let config = {
   ...DefaultConfig,
   populationSize: 1500,
-  fitnessThreshold: 15.9,
-  adjustCompatibilityThreshold: true,
-  compatibilityModifierTarget: 30,
-  feedForwardOnly: true,
-  excessCoefficient: 2,
-  disjointCoefficient: 0.5,
-  weightDifferenceCoefficient: 1
+  fitnessThreshold: 15.9
+  //adjustCompatibilityThreshold: false,
+  //compatibilityModifierTarget: 30,
+  //feedForwardOnly: true,
+  //excessCoefficient: 2,
+  //disjointCoefficient: 0.5,
+  //weightDifferenceCoefficient: 1
   // compatibilityThreshold: 4,
   // genomeWeightPerturbated: 0.9,
   // dropoffAge: 100
 };
 
 let nodes = [
-  new NodeGene(NodeTypes.Input, "0"),
-  new NodeGene(NodeTypes.Input, "1"),
-  new NodeGene(NodeTypes.Output, "output")
+  new NodeGene("input0", NodeTypes.Input),
+  new NodeGene("input1", NodeTypes.Input),
+  new NodeGene("output", NodeTypes.Output)
 ];
 let connections = [
   new ConnectionGene(nodes[0], nodes[2]),
@@ -51,12 +52,13 @@ const computeFitness = function (network, organism, population) {
   return fitness ** 2;
 };
 
-let avgGen = 0,
-  avgFitness = 0,
-  avgNodes = 0,
-  avgConnections = 0,
-  avgSpecies = 0,
+let totalGen = 0,
+  totalFitness = 0,
+  totalNodes = 0,
+  totalConnections = 0,
+  totalSpecies = 0,
   failures = 0;
+
 const testRun = 30;
 
 const runTest = async () => {
@@ -67,31 +69,37 @@ const runTest = async () => {
       connections
     });
 
-    await pop
-      .run(computeFitness, 300)
-      .then((org) => {
-        if (org.fitness > 16) throw JSON.stringify(org);
-
-        avgGen += org.generation;
-        avgFitness += org.fitness;
-        avgNodes += org.nodes.size;
-        avgConnections += org.connections.size;
-        avgSpecies += pop.species.length;
-
-        process.stdout.write(".");
-      })
-      .catch(() => {
-        failures++;
-        process.stdout.write("x");
+    try {
+      const solution = await pop.run(computeFitness, 300, () => {
+        readline.clearLine(process.stdout);
+        console.log(
+          `Run ${i}, Generation ${pop.generation} Champ: ${
+            pop.getSuperChamp().fitness
+          }`
+        );
+        readline.moveCursor(process.stdout, 0, -1);
       });
+      readline.clearLine(process.stdout);
+      console.log(
+        `Run ${i}, Generation ${pop.generation} Champ: ${solution.fitness}`
+      );
+
+      totalGen += pop.generation;
+      totalFitness += solution.fitness;
+      totalNodes += solution.genome.nodes.size;
+      totalConnections += solution.genome.connections.size;
+      totalSpecies += pop.species.length;
+    } catch (e) {
+      console.log("Error:", e.stack);
+      failures++;
+    }
   }
-  process.stdout.write("\n");
   let n = testRun - failures;
-  console.log("avg generations", avgGen / n);
-  console.log("avg species", avgSpecies / n);
-  console.log("avg fitness", avgFitness / n);
-  console.log("avg nodes", avgNodes / n);
-  console.log("avg connections", avgConnections / n);
+  console.log("Average generations", totalGen / n);
+  console.log("Average species", totalSpecies / n);
+  console.log("Average fitness", totalFitness / n);
+  console.log("Average nodes", totalNodes / n);
+  console.log("Average connections", totalConnections / n);
   console.log("failures", failures);
 };
 
