@@ -313,13 +313,14 @@ class Genome {
    * @param connections
    */
   static isRecurrent(connection, connections) {
-    const startNode = connection.from;
+    const history = [];
     const stack = [connection];
 
     while (stack.length) {
       connection = stack.shift();
+      history.push(connection.from.id);
 
-      if (connection.to.id === startNode.id) {
+      if (history.indexOf(connection.to.id) !== -1) {
         return true;
       }
 

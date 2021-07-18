@@ -45,7 +45,8 @@ const computeFitness = function (network, organism, population) {
   testData.sort(() => Math.random() - 0.5);
 
   testData.forEach(([inputs, expected]) => {
-    const [output] = network.activate(inputs);
+    let [output] = network.activate(inputs);
+    output = Math.round(output);
     fitness -= Math.abs(output - expected);
   });
 
@@ -74,14 +75,14 @@ const runTest = async () => {
         readline.clearLine(process.stdout);
         console.log(
           `Run ${i}, Generation ${pop.generation} Champ: ${
-            pop.getSuperChamp().fitness
+            pop.getSuperChamp()?.fitness
           }`
         );
         readline.moveCursor(process.stdout, 0, -1);
       });
       readline.clearLine(process.stdout);
       console.log(
-        `Run ${i}, Generation ${pop.generation} Champ: ${solution.fitness}`
+        `Run ${i}, Generation ${pop.generation} Champ: ${solution.fitness} - Nodes: ${solution.genome.nodes.size}, Connections: ${solution.genome.connections.size}`
       );
 
       totalGen += pop.generation;

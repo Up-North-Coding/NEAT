@@ -12,4 +12,5 @@ docker run \
     -v $(pwd)/src/experiments/:/app/experiments/  \
     -v $(pwd)/src/lib/:/app/lib/  \
     -v $(pwd)/src/package.json:/app/package.json  \
+    -p 127.0.0.1:9229:9229 \
     unc-neat:latest npm run experiment -- $@

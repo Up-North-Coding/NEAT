@@ -23,5 +23,6 @@ RUN npm install
 COPY --chown=node:node src/ /app
 
 EXPOSE 3000
+EXPOSE 9229
 
 CMD ["npm", "run", "test"]

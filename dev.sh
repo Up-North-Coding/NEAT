@@ -11,4 +11,5 @@ docker run \
     -it    \
     -v $(pwd)/src/lib/:/app/lib/  \
     -v $(pwd)/src/package.json:/app/package.json  \
+    -p 9229:9229 \
     unc-neat:latest

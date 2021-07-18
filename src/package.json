@@ -33,8 +33,6 @@
         "regenerator-runtime": "0.13.7"
     },
     "jest": {
-        "setupFilesAfterEnv": [
-            "./lib/__test__/setupTests.js"
-        ]
+        "setupFilesAfterEnv": ["./lib/__test__/setupTests.js"]
     }
 }
